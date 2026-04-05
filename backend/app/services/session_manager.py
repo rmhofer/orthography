@@ -203,6 +203,9 @@ class SessionManager:
             chosen = condition
         participant_a.metadata_json["assignedCondition"] = chosen
         participant_b.metadata_json["assignedCondition"] = chosen
+        # Merge participant-chosen settings into the config snapshot
+        config["interfaceType"] = participant_a.metadata_json.get("interfaceType", config.get("interfaceType", "blocks"))
+        config["referentDomain"] = participant_a.metadata_json.get("referentDomain", config.get("referentDomain", "objects"))
         dyad, session = repository.create_dyad(participant_a, participant_b, chosen, config)
         active = self._load_session(db, participant_a)
         assert active is not None
