@@ -52,7 +52,7 @@ class Repository:
 
     def create_participant(self, metadata: dict | None = None, custom_token: str | None = None) -> ParticipantModel:
         metadata = metadata or {}
-        metadata.setdefault("assignedCondition", random.choice(["transparent", "opaque"]))
+        metadata.setdefault("assignedCondition", "transparent")
         token = custom_token or secrets.token_urlsafe(6)  # ~8 chars
         participant = ParticipantModel(token=token, metadata_json=metadata, learning_state={})
         self.db.add(participant)
