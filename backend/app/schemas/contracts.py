@@ -19,6 +19,7 @@ class StudyConfig(BaseModel):
     pointsPerCorrect: int = 10
     showWordAudioToSpeaker: bool = True
     historyPreviewSize: int = 3
+    referentDomain: Literal["objects", "logo", "lsystem", "shapes", "grid"] = "objects"
     interfaceType: Literal["blocks", "seismograph", "inertial", "telegraph", "etch_a_sketch", "pendulum"] = "blocks"
     seismographMode: Literal["continuous", "hold_to_draw"] = "hold_to_draw"
     inertialAlpha: float = 0.15
@@ -28,6 +29,7 @@ class ParticipantStartRequest(BaseModel):
     token: str | None = None
     recruitmentData: dict[str, Any] = Field(default_factory=dict)
     interfaceType: str | None = None
+    referentDomain: str | None = None
 
 
 class ParticipantStartResponse(BaseModel):

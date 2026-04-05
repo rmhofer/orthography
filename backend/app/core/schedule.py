@@ -160,6 +160,64 @@ def build_schedule(seed: str, condition: Condition, total_trials: int = 60) -> l
     return schedule
 
 
+def build_generic_schedule(
+    seed: str,
+    referent_ids: list[str],
+    groups: dict[str, list[str]],
+    total_trials: int = 60,
+    choice_set_size: int = 6,
+) -> list[TrialDefinition]:
+    """Domain-agnostic schedule builder for procedural referent domains.
+
+    Args:
+        seed: deterministic seed string
+        referent_ids: all referent IDs
+        groups: mapping from group_id -> list of referent IDs in that group
+        total_trials: number of trials to generate
+        choice_set_size: number of referents per choice set
+    """
+    rng = _rng_from_seed(seed)
+    schedule: list[TrialDefinition] = []
+    group_ids = list(groups.keys())
+
+    for trial_num in range(1, total_trials + 1):
+        # Pick a target referent
+        target = rng.choice(referent_ids)
+        target_group = next((g for g, members in groups.items() if target in members), group_ids[0])
+
+        # Build choice set: include target + same-group items + random distractors
+        same_group = [r for r in groups.get(target_group, []) if r != target]
+        other = [r for r in referent_ids if r != target and r not in same_group]
+        rng.shuffle(same_group)
+        rng.shuffle(other)
+
+        # Include 1-2 same-group + fill rest with distractors
+        n_same = min(2, len(same_group))
+        n_other = choice_set_size - 1 - n_same
+        choice_set = [target] + same_group[:n_same] + other[:n_other]
+        rng.shuffle(choice_set)
+
+        # Determine trial type based on position in the schedule
+        frac = trial_num / total_trials
+        if frac <= 0.15:
+            trial_type = "warmup"
+        elif frac <= 0.4:
+            trial_type = "group_discrimination"
+        elif frac <= 0.7:
+            trial_type = "variant_discrimination"
+        else:
+            trial_type = "cross_cutting"
+
+        schedule.append(TrialDefinition(
+            trial_number=trial_num,
+            trial_type=trial_type,
+            target_referent=target,
+            choice_set=choice_set,
+            speaker_slot="participant_a" if trial_num % 2 == 1 else "participant_b",
+        ))
+    return schedule
+
+
 def role_for_trial(trial_number: int, participant_slot: Literal["participant_a", "participant_b"]) -> Role:
     speaker_slot = "participant_a" if trial_number % 2 == 1 else "participant_b"
     return "speaker" if participant_slot == speaker_slot else "listener"

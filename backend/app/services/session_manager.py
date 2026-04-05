@@ -60,10 +60,28 @@ class ActiveSession:
 class SessionManager:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.manifest = build_manifest()
-        self.referents = {referent.id: referent for referent in build_referents()}
+        self._manifests: dict[str, dict] = {}
+        self._referent_maps: dict[str, dict] = {}
         self.active_sessions: dict[str, ActiveSession] = {}
         self.token_to_session: dict[str, str] = {}
+
+    @property
+    def manifest(self) -> dict:
+        return self.get_manifest("objects")
+
+    @property
+    def referents(self) -> dict:
+        return self.get_referent_map("objects")
+
+    def get_manifest(self, domain_id: str = "objects") -> dict:
+        if domain_id not in self._manifests:
+            self._manifests[domain_id] = build_manifest(domain_id=domain_id)
+        return self._manifests[domain_id]
+
+    def get_referent_map(self, domain_id: str = "objects") -> dict:
+        if domain_id not in self._referent_maps:
+            self._referent_maps[domain_id] = {r.id: r for r in build_referents()} if domain_id == "objects" else {}
+        return self._referent_maps[domain_id]
 
     def study_config(self, db: Session) -> dict:
         stored = Repository(db).get_admin_config()
@@ -102,7 +120,9 @@ class SessionManager:
 
     def bootstrap(self, db: Session, participant: ParticipantModel) -> dict:
         repository = Repository(db)
-        return repository.bootstrap_payload(participant, self.study_config(db), self.manifest)
+        domain_id = participant.metadata_json.get("referentDomain", "objects")
+        manifest = self.get_manifest(domain_id)
+        return repository.bootstrap_payload(participant, self.study_config(db), manifest)
 
     def record_consent(self, db: Session, participant: ParticipantModel, consented: bool) -> ParticipantModel:
         participant.consented = consented
@@ -150,12 +170,13 @@ class SessionManager:
         paired = None
         if config["pairingMode"] == "auto":
             waiting = repository.list_waiting_participants()
-            # Group by (assignedCondition, interfaceType) — only same-interface participants can pair
-            grouped: dict[tuple[str, str], list[ParticipantModel]] = {}
+            # Group by (assignedCondition, interfaceType, referentDomain) — must all match to pair
+            grouped: dict[tuple[str, str, str], list[ParticipantModel]] = {}
             for wp in waiting:
                 key = (
                     wp.metadata_json.get("assignedCondition", "transparent"),
                     wp.metadata_json.get("interfaceType", "blocks"),
+                    wp.metadata_json.get("referentDomain", "objects"),
                 )
                 grouped.setdefault(key, []).append(wp)
             for key, group in grouped.items():
@@ -243,14 +264,27 @@ class SessionManager:
         speaker_token = active.participants[trial["speaker_slot"]]
         listener_token = active.other_token(speaker_token)
         role = role_for_trial(trial["trial_number"], active.slot_for_token(token or speaker_token)) if token else "speaker"
-        target = self.referents[trial["target_referent"]]
+        domain_id = active.config_snapshot.get("referentDomain", "objects")
+        manifest = self.get_manifest(domain_id)
+
+        # Find target audio URL (only for objects domain)
+        target_audio = None
+        if role == "speaker" and domain_id == "objects":
+            referent_map = self.get_referent_map(domain_id)
+            target = referent_map.get(trial["target_referent"])
+            if target:
+                for item in manifest["referents"]:
+                    if item["id"] == target.id:
+                        target_audio = item["audio"].get(active.condition)
+                        break
+
         payload = {
             "trialNumber": trial["trial_number"],
             "trialType": trial["trial_type"],
             "role": role,
             "choiceSet": trial["choice_set"],
             "targetReferent": trial["target_referent"],
-            "targetAudioUrl": self.manifest["referents"][next(index for index, item in enumerate(self.manifest["referents"]) if item["id"] == target.id)]["audio"][active.condition] if role == "speaker" else None,
+            "targetAudioUrl": target_audio,
             "timerSeconds": active.config_snapshot.get("speakerTimeLimitS", self.settings.speaker_time_limit_s),
             "score": active.cumulative_score,
             "history": active.prior_history[-active.config_snapshot.get("historyPreviewSize", self.settings.history_preview_size) :],
@@ -312,7 +346,10 @@ class SessionManager:
             correct = response_referent == trial["target_referent"]
             if correct:
                 active.cumulative_score += self.study_config(db)["pointsPerCorrect"]
-            target_word = word_for_referent(self.referents[trial["target_referent"]], active.condition)  # type: ignore[arg-type]
+            domain_id = active.config_snapshot.get("referentDomain", "objects")
+            referent_map = self.get_referent_map(domain_id)
+            target_ref = referent_map.get(trial["target_referent"])
+            target_word = word_for_referent(target_ref, active.condition) if target_ref else trial["target_referent"]  # type: ignore[arg-type]
             composition_time_ms = max(
                 0,
                 (active.current_trial_state.submitted_at_ms or int(time.time() * 1000)) - active.current_trial_state.started_at_ms,

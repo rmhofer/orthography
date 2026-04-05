@@ -100,7 +100,23 @@ class Repository:
         self.db.add(dyad)
         self.db.flush()
 
-        schedule = [trial.to_dict() for trial in build_schedule(dyad.public_id, condition, config_snapshot.get("totalTrials", 60))]
+        domain_id = config_snapshot.get("referentDomain", "objects")
+        total_trials = config_snapshot.get("totalTrials", 60)
+        if domain_id == "objects" and total_trials == 60:
+            schedule = [trial.to_dict() for trial in build_schedule(dyad.public_id, condition, total_trials)]
+        else:
+            from app.core.domains import get_domain
+            from app.core.schedule import build_generic_schedule
+            domain = get_domain(domain_id)
+            lib = domain.library()
+            referent_ids = [r.id for r in lib]
+            groups = {}
+            for r in lib:
+                groups.setdefault(r.group, []).append(r.id)
+            schedule = [trial.to_dict() for trial in build_generic_schedule(
+                dyad.public_id, referent_ids, groups, total_trials,
+                config_snapshot.get("choiceSetSize", 6),
+            )]
         session = GameSessionModel(dyad_id=dyad.id, schedule_json=schedule, state="ready")
         self.db.add(session)
         self.db.flush()

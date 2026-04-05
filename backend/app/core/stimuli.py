@@ -140,25 +140,8 @@ def word_for_referent(referent: Referent, condition: Condition) -> str:
     return inflect(referent.stem_id, referent.modifier_id, condition)
 
 
-def build_manifest(asset_prefix: str = "/study-assets") -> dict:
-    referents = []
-    for referent in build_referents():
-        referents.append(
-            {
-                "id": referent.id,
-                "stemId": referent.stem_id,
-                "modifierId": referent.modifier_id,
-                "imageUrl": f"{asset_prefix}/referents/{referent.image_filename}",
-                "audio": {
-                    "transparent": f"{asset_prefix}/audio/transparent/{referent.audio_id}.wav",
-                    "opaque": f"{asset_prefix}/audio/opaque/{referent.audio_id}.wav",
-                },
-                "surfaceForms": {
-                    "transparent": word_for_referent(referent, "transparent"),
-                    "opaque": word_for_referent(referent, "opaque"),
-                },
-            }
-        )
+def build_manifest(asset_prefix: str = "/study-assets", domain_id: str = "objects") -> dict:
+    from app.core.domains import get_domain, svg_to_data_uri
 
     primitives = [
         {
@@ -170,24 +153,50 @@ def build_manifest(asset_prefix: str = "/study-assets") -> dict:
         for primitive in PRIMITIVES
     ]
 
-    stems = [
-        {
-            "id": stem.id,
-            "surface": stem.surface,
-            "label": stem.label,
-            "finalClass": stem.final_class,
-            "shapeId": stem.shape_id,
-        }
-        for stem in STEMS
-    ]
-    modifiers = [
-        {
-            "id": modifier.id,
-            "label": modifier.label,
-            "suffix": modifier.suffix,
-            "variant": modifier.variant,
-            "description": modifier.description,
-        }
-        for modifier in MODIFIERS
-    ]
-    return {"stems": stems, "modifiers": modifiers, "primitives": primitives, "referents": referents}
+    if domain_id == "objects":
+        referents = []
+        for referent in build_referents():
+            referents.append(
+                {
+                    "id": referent.id,
+                    "stemId": referent.stem_id,
+                    "modifierId": referent.modifier_id,
+                    "imageUrl": f"{asset_prefix}/referents/{referent.image_filename}",
+                    "audio": {
+                        "transparent": f"{asset_prefix}/audio/transparent/{referent.audio_id}.wav",
+                        "opaque": f"{asset_prefix}/audio/opaque/{referent.audio_id}.wav",
+                    },
+                    "surfaceForms": {
+                        "transparent": word_for_referent(referent, "transparent"),
+                        "opaque": word_for_referent(referent, "opaque"),
+                    },
+                }
+            )
+        stems_list = [
+            {"id": s.id, "surface": s.surface, "label": s.label, "finalClass": s.final_class, "shapeId": s.shape_id}
+            for s in STEMS
+        ]
+        modifiers_list = [
+            {"id": m.id, "label": m.label, "suffix": m.suffix, "variant": m.variant, "description": m.description}
+            for m in MODIFIERS
+        ]
+    else:
+        domain = get_domain(domain_id)
+        lib = domain.library()
+        referents = [
+            {
+                "id": r.id,
+                "stemId": r.group,
+                "modifierId": r.variant,
+                "imageUrl": svg_to_data_uri(r.svg),
+                "audio": {"transparent": "", "opaque": ""},
+                "surfaceForms": {"transparent": r.label, "opaque": r.label},
+            }
+            for r in lib
+        ]
+        groups = domain.groups()
+        variants = domain.variants()
+        stems_list = [{"id": g, "surface": g, "label": g, "finalClass": "vowel", "shapeId": g} for g in groups]
+        modifiers_list = [{"id": v, "label": v, "suffix": "", "variant": v, "description": v} for v in variants]
+
+    return {"domain": domain_id, "stems": stems_list, "modifiers": modifiers_list, "primitives": primitives, "referents": referents}

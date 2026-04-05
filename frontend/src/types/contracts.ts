@@ -10,6 +10,7 @@ export type ParticipantPhase =
   | "completed";
 
 export type InterfaceType = "blocks" | "seismograph" | "inertial" | "telegraph" | "etch_a_sketch" | "pendulum";
+export type ReferentDomain = "objects" | "logo" | "lsystem" | "shapes" | "grid";
 
 export type StudyConfig = {
   condition: "random" | Condition;
@@ -25,6 +26,7 @@ export type StudyConfig = {
   pointsPerCorrect: number;
   showWordAudioToSpeaker: boolean;
   historyPreviewSize: number;
+  referentDomain?: ReferentDomain;
   interfaceType?: InterfaceType;
   seismographMode?: "continuous" | "hold_to_draw";
   inertialAlpha?: number;

@@ -4,15 +4,23 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppShell } from "../components/AppShell";
 import { startParticipant } from "../lib/api";
 import { phaseRoute } from "../lib/helpers";
-import type { InterfaceType, ParticipantPhase } from "../types/contracts";
+import type { InterfaceType, ParticipantPhase, ReferentDomain } from "../types/contracts";
 
 const INTERFACE_OPTIONS: { value: InterfaceType; label: string; description: string }[] = [
   { value: "blocks", label: "Building Blocks", description: "Place and arrange discrete symbols on a canvas" },
-  { value: "seismograph", label: "Seismograph", description: "Draw a 1D trace with a vertical slider on a scrolling paper roll" },
-  { value: "inertial", label: "Inertial Drawing", description: "Draw with a pen that lags behind your cursor (low-pass filtered)" },
+  { value: "seismograph", label: "Seismograph", description: "Draw a 1D trace with a vertical slider on scrolling paper" },
+  { value: "inertial", label: "Inertial Drawing", description: "Draw with a pen that lags behind your cursor" },
   { value: "telegraph", label: "Telegraph", description: "Send timed pulses by pressing and holding a key" },
-  { value: "etch_a_sketch", label: "Etch-a-Sketch", description: "Draw with independent axis filtering (X and Y filtered separately)" },
-  { value: "pendulum", label: "Pendulum", description: "Apply force to a swinging mass — the pen draws oscillatory traces" },
+  { value: "etch_a_sketch", label: "Etch-a-Sketch", description: "Draw with independent axis filtering" },
+  { value: "pendulum", label: "Pendulum", description: "Apply force to a swinging mass to draw traces" },
+];
+
+const DOMAIN_OPTIONS: { value: ReferentDomain; label: string; description: string }[] = [
+  { value: "objects", label: "Objects", description: "Hand-crafted shapes with stem + modifier structure" },
+  { value: "logo", label: "Turtle Graphics", description: "LOGO programs — polygons, stars, spirals, compounds" },
+  { value: "lsystem", label: "L-Systems", description: "Grammar-driven branching fractals and plants" },
+  { value: "shapes", label: "Shape Scenes", description: "Composed geometric primitives with spatial operators" },
+  { value: "grid", label: "Grid Patterns", description: "Compositional 2D patterns — stripes, checkers, overlays" },
 ];
 
 export function IntroPage() {
@@ -21,6 +29,7 @@ export function IntroPage() {
   const prefilledUserId = searchParams.get("userId") ?? "";
   const [userId, setUserId] = useState(prefilledUserId);
   const [selectedInterface, setSelectedInterface] = useState<InterfaceType>("blocks");
+  const [selectedDomain, setSelectedDomain] = useState<ReferentDomain>("objects");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +38,7 @@ export function IntroPage() {
     setError(null);
     try {
       const token = userId.trim() || undefined;
-      const response = await startParticipant(token, selectedInterface);
+      const response = await startParticipant(token, selectedInterface, selectedDomain);
       const phase = response.phase as ParticipantPhase;
       const route = phaseRoute(response.token, phase);
       navigate(`${route}?interface=${selectedInterface}`);
@@ -60,7 +69,24 @@ export function IntroPage() {
           </label>
 
           <div>
-            <span style={{ fontWeight: 600, fontSize: "0.85rem", display: "block", marginBottom: "0.5rem" }}>Interface</span>
+            <span style={{ fontWeight: 600, fontSize: "0.85rem", display: "block", marginBottom: "0.5rem" }}>Referent Domain</span>
+            <div className="interface-picker">
+              {DOMAIN_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`interface-option ${selectedDomain === opt.value ? "selected" : ""}`}
+                  onClick={() => setSelectedDomain(opt.value)}
+                >
+                  <strong>{opt.label}</strong>
+                  <span>{opt.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <span style={{ fontWeight: 600, fontSize: "0.85rem", display: "block", marginBottom: "0.5rem" }}>Signaling Interface</span>
             <div className="interface-picker">
               {INTERFACE_OPTIONS.map((opt) => (
                 <button

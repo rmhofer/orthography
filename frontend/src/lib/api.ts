@@ -22,10 +22,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function startParticipant(token?: string, interfaceType?: string) {
+export async function startParticipant(token?: string, interfaceType?: string, referentDomain?: string) {
   return apiFetch<{ token: string; participantId: string; phase: string }>("/api/participants/start", {
     method: "POST",
-    body: JSON.stringify({ token, recruitmentData: {}, interfaceType }),
+    body: JSON.stringify({ token, recruitmentData: {}, interfaceType, referentDomain }),
   });
 }
 

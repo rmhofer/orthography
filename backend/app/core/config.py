@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     lobby_wait_limit_seconds: int = 180
     history_preview_size: int = 3
     view_mode: str = "transmit"
+    referent_domain: str = "objects"
     interface_type: str = "blocks"
     seismograph_mode: str = "hold_to_draw"
     inertial_alpha: float = 0.15
@@ -56,6 +57,7 @@ class Settings(BaseSettings):
             "pointsPerCorrect": self.points_per_correct,
             "showWordAudioToSpeaker": True,
             "historyPreviewSize": self.history_preview_size,
+            "referentDomain": self.referent_domain,
             "interfaceType": self.interface_type,
             "seismographMode": self.seismograph_mode,
             "inertialAlpha": self.inertial_alpha,
