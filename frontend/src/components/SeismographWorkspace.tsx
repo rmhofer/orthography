@@ -10,8 +10,8 @@ type SeismographWorkspaceProps = {
   onClear?: () => void;
 };
 
-const CANVAS_W = 440;
-const CANVAS_H = 360;
+const CANVAS_W = 480;
+const CANVAS_H = 320;
 const SAMPLE_INTERVAL = 16; // ~60fps
 
 export function SeismographWorkspace({ canvasState, onAction, readOnly, mode, onClear }: SeismographWorkspaceProps) {
@@ -117,15 +117,7 @@ export function SeismographWorkspace({ canvasState, onAction, readOnly, mode, on
           ) : null}
         </svg>
       </div>
-      {!readOnly ? (
-        <div className="canvas-actions">
-          <div className="canvas-actions-left">
-            <button type="button" className="icon-button" onClick={() => { setRecording(false); startTimeRef.current = null; onClear?.(); }}>
-              Clear
-            </button>
-          </div>
-        </div>
-      ) : null}
+      {null}
     </div>
   );
 }
