@@ -1,26 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { AppShell } from "../components/AppShell";
-import { CompositionWorkspace } from "../components/CompositionWorkspace";
+import { SignalWorkspace } from "../components/SignalWorkspace";
 import { ReferentGrid } from "../components/ReferentGrid";
 import { completeLearning, recordExposure, recordQuiz } from "../lib/api";
-import { createPracticePrompt, phaseRoute, playAudio, shuffle } from "../lib/helpers";
+import { applyActionToCanvasState, createPracticePrompt, makeEmptyCanvasState, phaseRoute, playAudio, shuffle } from "../lib/helpers";
 import { useBootstrap } from "../hooks/useBootstrap";
-import type { CanvasAction, CanvasPrimitive } from "../types/contracts";
+import type { CanvasState, InterfaceType, SignalAction } from "../types/contracts";
 
 type LearningStep = "exposure" | "quiz" | "practice";
 
 export function LearningPage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data, loading, error, refresh } = useBootstrap(token);
+  const interfaceType: InterfaceType = (searchParams.get("interface") as InterfaceType) || data?.studyConfig.interfaceType || "blocks";
   const [step, setStep] = useState<LearningStep>("exposure");
   const [heardForms, setHeardForms] = useState<string[]>([]);
   const [quizPrompt, setQuizPrompt] = useState<{ referentId: string; options: string[]; taskType: "audio_to_referent" | "referent_to_word" } | null>(null);
   const [quizStatus, setQuizStatus] = useState<{ slidingAccuracy: number; passed: boolean }>({ slidingAccuracy: 0, passed: false });
   const [practiceTrial, setPracticeTrial] = useState(1);
-  const [practiceCanvas, setPracticeCanvas] = useState<CanvasPrimitive[]>([]);
+  const [practiceCanvasState, setPracticeCanvasState] = useState<CanvasState>(() => makeEmptyCanvasState(interfaceType));
 
   useEffect(() => {
     if (!data || !token) {
@@ -53,35 +55,8 @@ export function LearningPage() {
   const allHeard = manifest ? heardForms.length >= manifest.referents.length : false;
   const practicePrompt = useMemo(() => (manifest ? createPracticePrompt(manifest.primitives) : null), [manifest]);
 
-  function handlePracticeAction(action: CanvasAction) {
-    if (action.action === "place") {
-      setPracticeCanvas((current) => [
-        ...current,
-        {
-          instanceId: action.primitiveInstanceId,
-          primitiveId: action.primitiveId,
-          x: action.x,
-          y: action.y,
-          placementOrder: current.length + 1,
-          createdAtMs: action.timestampMs,
-          updatedAtMs: action.timestampMs,
-        },
-      ]);
-      return;
-    }
-    if (action.action === "move") {
-      setPracticeCanvas((current) =>
-        current.map((primitive) =>
-          primitive.instanceId === action.primitiveInstanceId
-            ? { ...primitive, x: action.x, y: action.y, updatedAtMs: action.timestampMs }
-            : primitive,
-        ),
-      );
-      return;
-    }
-    if (action.action === "remove") {
-      setPracticeCanvas((current) => current.filter((primitive) => primitive.instanceId !== action.primitiveInstanceId));
-    }
+  function handlePracticeAction(action: SignalAction) {
+    setPracticeCanvasState((current) => applyActionToCanvasState(current, action));
   }
 
   async function handleExposurePlay(referentId: string, audioUrl: string) {
@@ -130,7 +105,7 @@ export function LearningPage() {
       return;
     }
     setPracticeTrial(2);
-    setPracticeCanvas([]);
+    setPracticeCanvasState(makeEmptyCanvasState(interfaceType));
   }
 
   async function handleSkipLearning() {
@@ -228,11 +203,14 @@ export function LearningPage() {
                   ))}
                 </ul>
               </div>
-              <CompositionWorkspace
-                primitives={manifest.primitives}
-                placedPrimitives={practiceCanvas}
+              <SignalWorkspace
+                interfaceType={interfaceType}
+                canvasState={practiceCanvasState}
                 onAction={handlePracticeAction}
+                readOnly={false}
+                primitives={manifest.primitives}
                 maxPrimitives={data!.studyConfig.maxPrimitivesPerForm}
+                onClear={() => setPracticeCanvasState(makeEmptyCanvasState(interfaceType))}
               />
               <button type="button" className="primary-button" onClick={() => void handlePracticeSubmit()}>
                 {practiceTrial === 2 ? "Finish Learning" : "Submit Practice Form"}

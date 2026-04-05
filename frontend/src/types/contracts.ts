@@ -9,6 +9,8 @@ export type ParticipantPhase =
   | "debrief"
   | "completed";
 
+export type InterfaceType = "blocks" | "seismograph" | "inertial" | "telegraph" | "etch_a_sketch" | "pendulum";
+
 export type StudyConfig = {
   condition: "random" | Condition;
   viewMode: "transmit";
@@ -23,6 +25,9 @@ export type StudyConfig = {
   pointsPerCorrect: number;
   showWordAudioToSpeaker: boolean;
   historyPreviewSize: number;
+  interfaceType?: InterfaceType;
+  seismographMode?: "continuous" | "hold_to_draw";
+  inertialAlpha?: number;
 };
 
 export type PrimitiveManifest = {
@@ -73,6 +78,8 @@ export type ParticipantBootstrap = {
   } | null;
 };
 
+/* ── Canvas primitives (blocks interface) ──────────────── */
+
 export type CanvasPrimitive = {
   instanceId: string;
   primitiveId: string;
@@ -83,36 +90,93 @@ export type CanvasPrimitive = {
   updatedAtMs: number;
 };
 
-export type CanvasAction =
-  | {
-      action: "place";
-      primitiveInstanceId: string;
-      primitiveId: string;
-      x: number;
-      y: number;
-      timestampMs: number;
-    }
-  | {
-      action: "move";
-      primitiveInstanceId: string;
-      x: number;
-      y: number;
-      timestampMs: number;
-    }
-  | {
-      action: "remove";
-      primitiveInstanceId: string;
-      timestampMs: number;
-    }
-  | {
-      action: "submit";
-      timestampMs: number;
-    };
+/* ── Canvas state: discriminated union across interfaces ── */
+
+export type BlocksCanvasState = {
+  interfaceType: "blocks";
+  primitives: CanvasPrimitive[];
+};
+
+export type SeismographCanvasState = {
+  interfaceType: "seismograph";
+  trace: { t: number; y: number }[];
+  durationMs: number;
+};
+
+export type InertialCanvasState = {
+  interfaceType: "inertial";
+  strokes: { points: { x: number; y: number; t: number }[] }[];
+};
+
+export type TelegraphCanvasState = {
+  interfaceType: "telegraph";
+  pulses: { startMs: number; endMs: number }[];
+  durationMs: number;
+};
+
+export type EtchASketchCanvasState = {
+  interfaceType: "etch_a_sketch";
+  strokes: { points: { x: number; y: number; t: number }[] }[];
+};
+
+export type PendulumCanvasState = {
+  interfaceType: "pendulum";
+  trace: { t: number; x: number; y: number }[];
+  durationMs: number;
+};
+
+export type CanvasState =
+  | BlocksCanvasState
+  | SeismographCanvasState
+  | InertialCanvasState
+  | TelegraphCanvasState
+  | EtchASketchCanvasState
+  | PendulumCanvasState;
+
+/* ── Actions: per-interface action types ───────────────── */
+
+export type BlocksAction =
+  | { action: "place"; primitiveInstanceId: string; primitiveId: string; x: number; y: number; timestampMs: number }
+  | { action: "move"; primitiveInstanceId: string; x: number; y: number; timestampMs: number }
+  | { action: "remove"; primitiveInstanceId: string; timestampMs: number }
+  | { action: "submit"; timestampMs: number };
+
+export type SeismographAction =
+  | { action: "sample"; t: number; y: number; timestampMs: number }
+  | { action: "clear"; timestampMs: number };
+
+export type InertialAction =
+  | { action: "stroke_start"; strokeId: string; x: number; y: number; filteredX: number; filteredY: number; timestampMs: number }
+  | { action: "stroke_move"; strokeId: string; x: number; y: number; filteredX: number; filteredY: number; timestampMs: number }
+  | { action: "stroke_end"; strokeId: string; timestampMs: number }
+  | { action: "clear"; timestampMs: number };
+
+export type TelegraphAction =
+  | { action: "pulse_start"; t: number; timestampMs: number }
+  | { action: "pulse_end"; t: number; timestampMs: number }
+  | { action: "clear"; timestampMs: number };
+
+export type EtchASketchAction =
+  | { action: "stroke_start"; strokeId: string; x: number; y: number; filteredX: number; filteredY: number; timestampMs: number }
+  | { action: "stroke_move"; strokeId: string; x: number; y: number; filteredX: number; filteredY: number; timestampMs: number }
+  | { action: "stroke_end"; strokeId: string; timestampMs: number }
+  | { action: "clear"; timestampMs: number };
+
+export type PendulumAction =
+  | { action: "physics_sample"; t: number; x: number; y: number; forceX: number; forceY: number; timestampMs: number }
+  | { action: "clear"; timestampMs: number };
+
+export type SignalAction = BlocksAction | SeismographAction | InertialAction | TelegraphAction | EtchASketchAction | PendulumAction;
+
+// Legacy CanvasAction alias for backward compat
+export type CanvasAction = BlocksAction;
+
+/* ── History & trial payloads ──────────────────────────── */
 
 export type HistoryEntry = {
   trialNumber: number;
   targetReferent: string;
-  canvasState: { primitives: CanvasPrimitive[] };
+  canvasState: CanvasState;
 };
 
 export type TrialPayload = {
@@ -130,10 +194,13 @@ export type TrialPayload = {
   listenerToken: string;
 };
 
+/* ── WebSocket messages ────────────────────────────────── */
+
 export type SocketMessage =
   | { event: "phase_sync"; payload: { sessionId: string; dyadId: string; condition: Condition; trial: TrialPayload; score: number; history: HistoryEntry[]; paused: boolean } }
   | { event: "session_resumed"; payload: TrialPayload }
-  | { event: "speaker_ready"; payload: { trialNumber: number; canvasState: { primitives: CanvasPrimitive[] }; actionLog: CanvasAction[] } }
+  | { event: "canvas_action_relay"; payload: SignalAction }
+  | { event: "speaker_done"; payload: { trialNumber: number; canvasState: CanvasState } }
   | { event: "feedback"; payload: { trialNumber: number; targetReferent: string; selectedReferent: string; correct: boolean; score: number } }
   | { event: "role_swap"; payload: TrialPayload | { completed: true; nextPhase: "debrief" } }
   | { event: "partner_disconnected"; payload: { token: string; reconnectGraceSeconds: number } }

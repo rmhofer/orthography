@@ -19,6 +19,9 @@ class StudyConfig(BaseModel):
     pointsPerCorrect: int = 10
     showWordAudioToSpeaker: bool = True
     historyPreviewSize: int = 3
+    interfaceType: Literal["blocks", "seismograph", "inertial", "telegraph", "etch_a_sketch", "pendulum"] = "blocks"
+    seismographMode: Literal["continuous", "hold_to_draw"] = "hold_to_draw"
+    inertialAlpha: float = 0.15
 
 
 class ParticipantStartRequest(BaseModel):
@@ -151,8 +154,10 @@ class WebSocketEnvelope(BaseModel):
     event: Literal[
         "phase_sync",
         "canvas_action",
+        "canvas_action_relay",
         "canvas_snapshot",
         "speaker_ready",
+        "speaker_done",
         "listener_guess",
         "feedback",
         "role_swap",

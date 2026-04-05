@@ -20,7 +20,7 @@ from app.db.repository import Repository
 
 @dataclass
 class ActiveTrialState:
-    canvas_primitives: list[dict] = field(default_factory=list)
+    canvas_state: dict = field(default_factory=dict)  # opaque, stores final canvasState from frontend
     action_log: list[dict] = field(default_factory=list)
     started_at_ms: int = field(default_factory=lambda: int(time.time() * 1000))
     submitted_at_ms: int | None = None
@@ -284,46 +284,20 @@ class SessionManager:
         if event == "canvas_action":
             if participant.token != speaker_token:
                 return
-            config = self.study_config(db)
-            if payload.get("action") == "place" and len(active.current_trial_state.canvas_primitives) >= config["maxPrimitivesPerForm"]:
-                return
             active.current_trial_state.action_log.append(payload)
-            if payload.get("action") == "place":
-                primitive = {
-                    "instanceId": payload["primitiveInstanceId"],
-                    "primitiveId": payload["primitiveId"],
-                    "x": payload["x"],
-                    "y": payload["y"],
-                    "placementOrder": len(active.current_trial_state.canvas_primitives) + 1,
-                    "createdAtMs": payload["timestampMs"],
-                    "updatedAtMs": payload["timestampMs"],
-                }
-                active.current_trial_state.canvas_primitives.append(primitive)
-            elif payload.get("action") == "move":
-                for primitive in active.current_trial_state.canvas_primitives:
-                    if primitive["instanceId"] == payload["primitiveInstanceId"]:
-                        primitive["x"] = payload["x"]
-                        primitive["y"] = payload["y"]
-                        primitive["updatedAtMs"] = payload["timestampMs"]
-            elif payload.get("action") == "remove":
-                active.current_trial_state.canvas_primitives = [
-                    primitive
-                    for primitive in active.current_trial_state.canvas_primitives
-                    if primitive["instanceId"] != payload["primitiveInstanceId"]
-                ]
-            repository.save_canvas_event(active_session_to_db_session(db, active), trial_number, participant.token, payload["action"], payload, payload["timestampMs"])
+            action_type = payload.get("action", "unknown")
+            repository.save_canvas_event(active_session_to_db_session(db, active), trial_number, participant.token, action_type, payload, payload.get("timestampMs", 0))
+            # Live-stream: forward action to listener in real-time
+            await self.send_to(active, listener_token, {"event": "canvas_action_relay", "payload": payload})
             return
 
         if event == "canvas_snapshot":
             if participant.token != speaker_token:
                 return
             active.current_trial_state.submitted_at_ms = payload.get("submittedAtMs", int(time.time() * 1000))
-            snapshot_payload = {
-                "trialNumber": trial_number,
-                "canvasState": {"primitives": active.current_trial_state.canvas_primitives},
-                "actionLog": active.current_trial_state.action_log,
-            }
-            await self.send_to(active, listener_token, {"event": "speaker_ready", "payload": snapshot_payload})
+            canvas_state = payload.get("canvasState", {})
+            active.current_trial_state.canvas_state = canvas_state
+            await self.send_to(active, listener_token, {"event": "speaker_done", "payload": {"trialNumber": trial_number, "canvasState": canvas_state}})
             return
 
         if event == "listener_guess":
@@ -346,7 +320,7 @@ class SessionManager:
                 "target_referent": trial["target_referent"],
                 "target_word": target_word,
                 "choice_set": trial["choice_set"],
-                "canvas_state": {"primitives": active.current_trial_state.canvas_primitives},
+                "canvas_state": active.current_trial_state.canvas_state,
                 "canvas_action_log": active.current_trial_state.action_log,
                 "speaker_composition_time_ms": composition_time_ms,
                 "listener_response": response_referent,
@@ -362,7 +336,7 @@ class SessionManager:
                 {
                     "trialNumber": trial_number,
                     "targetReferent": trial["target_referent"],
-                    "canvasState": {"primitives": active.current_trial_state.canvas_primitives},
+                    "canvasState": active.current_trial_state.canvas_state,
                 }
             )
             await self.broadcast(

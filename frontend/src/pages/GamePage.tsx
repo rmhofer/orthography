@@ -1,29 +1,76 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { AppShell } from "../components/AppShell";
-import { CompositionWorkspace } from "../components/CompositionWorkspace";
 import { HistoryStrip } from "../components/HistoryStrip";
 import { ReferentGrid } from "../components/ReferentGrid";
+import { SignalWorkspace } from "../components/SignalWorkspace";
 import { TopBar } from "../components/TopBar";
 import { sendSocket } from "../lib/api";
-import { loadHistory, persistHistory, playAudio } from "../lib/helpers";
+import { applyActionToCanvasState, loadHistory, makeEmptyCanvasState, normalizeCanvasState, persistHistory } from "../lib/helpers";
 import { useBootstrap } from "../hooks/useBootstrap";
 import { useParticipantSocket } from "../hooks/useParticipantSocket";
-import type { CanvasAction, CanvasPrimitive, HistoryEntry, SocketMessage, TrialPayload } from "../types/contracts";
+import type { CanvasState, HistoryEntry, InterfaceType, SignalAction, SocketMessage, TrialPayload } from "../types/contracts";
 
 export function GamePage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data } = useBootstrap(token);
+
+  // Interface type: URL param > studyConfig > "blocks"
+  const interfaceType: InterfaceType = (searchParams.get("interface") as InterfaceType) || data?.studyConfig.interfaceType || "blocks";
+  const seismographMode = (searchParams.get("seismo_mode") as "continuous" | "hold_to_draw") || data?.studyConfig.seismographMode || "hold_to_draw";
+  const inertialAlpha = Number(searchParams.get("alpha")) || data?.studyConfig.inertialAlpha || 0.15;
+
   const [trial, setTrial] = useState<TrialPayload | null>(null);
   const [score, setScore] = useState(0);
   const [history, setHistory] = useState<HistoryEntry[]>(() => (token ? loadHistory(token) : []));
-  const [speakerCanvas, setSpeakerCanvas] = useState<CanvasPrimitive[]>([]);
-  const [listenerCanvas, setListenerCanvas] = useState<CanvasPrimitive[]>([]);
+  const [speakerCanvasState, setSpeakerCanvasState] = useState<CanvasState>(() => makeEmptyCanvasState(interfaceType));
+  const [listenerCanvasState, setListenerCanvasState] = useState<CanvasState>(() => makeEmptyCanvasState(interfaceType));
   const [selectedGuess, setSelectedGuess] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ correct: boolean; targetReferent: string; selectedReferent: string } | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(45);
+  const [speakerDone, setSpeakerDone] = useState(false);
+
+  // Undo/redo stacks
+  const undoStack = useRef<CanvasState[]>([]);
+  const redoStack = useRef<CanvasState[]>([]);
+  const [undoLen, setUndoLen] = useState(0);
+  const [redoLen, setRedoLen] = useState(0);
+
+  function pushUndo(snapshot: CanvasState) {
+    undoStack.current.push(snapshot);
+    redoStack.current = [];
+    setUndoLen(undoStack.current.length);
+    setRedoLen(0);
+  }
+
+  function handleUndo() {
+    if (undoStack.current.length === 0) return;
+    const prev = undoStack.current.pop()!;
+    redoStack.current.push(speakerCanvasState);
+    setSpeakerCanvasState(prev);
+    setUndoLen(undoStack.current.length);
+    setRedoLen(redoStack.current.length);
+  }
+
+  function handleRedo() {
+    if (redoStack.current.length === 0) return;
+    const next = redoStack.current.pop()!;
+    undoStack.current.push(speakerCanvasState);
+    setSpeakerCanvasState(next);
+    setUndoLen(undoStack.current.length);
+    setRedoLen(redoStack.current.length);
+  }
+
+  function handleClear() {
+    const empty = makeEmptyCanvasState(interfaceType);
+    if (JSON.stringify(speakerCanvasState) === JSON.stringify(empty)) return;
+    pushUndo(speakerCanvasState);
+    setSpeakerCanvasState(empty);
+    sendSocket(socketRef.current, "canvas_action", { action: "clear", timestampMs: Date.now() });
+  }
 
   useEffect(() => {
     if (data?.participant.phase === "debrief" && token) {
@@ -38,9 +85,7 @@ export function GamePage() {
   }, [history, token]);
 
   useEffect(() => {
-    if (!trial) {
-      return;
-    }
+    if (!trial) return;
     setSecondsLeft(trial.timerSeconds);
     const timer = window.setInterval(() => {
       setSecondsLeft((current) => Math.max(0, current - 1));
@@ -50,7 +95,7 @@ export function GamePage() {
 
   useEffect(() => {
     if (secondsLeft === 0 && trial?.role === "speaker") {
-      sendSocket(socketRef.current, "canvas_snapshot", { submittedAtMs: Date.now() });
+      sendSocket(socketRef.current, "canvas_snapshot", { canvasState: speakerCanvasState, submittedAtMs: Date.now() });
     }
   }, [secondsLeft, trial]);
 
@@ -59,15 +104,22 @@ export function GamePage() {
       if (message.event === "phase_sync") {
         setTrial(message.payload.trial);
         setScore(message.payload.score);
-        setHistory(message.payload.history);
+        setHistory(message.payload.history.map((h) => ({ ...h, canvasState: normalizeCanvasState(h.canvasState) })));
         return;
       }
       if (message.event === "session_resumed") {
         setTrial(message.payload);
         return;
       }
-      if (message.event === "speaker_ready") {
-        setListenerCanvas(message.payload.canvasState.primitives);
+      // Live streaming: receive speaker's actions in real-time
+      if (message.event === "canvas_action_relay") {
+        setListenerCanvasState((current) => applyActionToCanvasState(current, message.payload));
+        return;
+      }
+      // Speaker finished composing
+      if (message.event === "speaker_done") {
+        setListenerCanvasState(normalizeCanvasState(message.payload.canvasState));
+        setSpeakerDone(true);
         return;
       }
       if (message.event === "feedback") {
@@ -83,57 +135,45 @@ export function GamePage() {
           return;
         }
         setTrial(message.payload);
-        setSpeakerCanvas([]);
-        setListenerCanvas([]);
+        setSpeakerCanvasState(makeEmptyCanvasState(interfaceType));
+        setListenerCanvasState(makeEmptyCanvasState(interfaceType));
         setSelectedGuess(null);
         setFeedback(null);
+        setSpeakerDone(false);
+        undoStack.current = [];
+        redoStack.current = [];
+        setUndoLen(0);
+        setRedoLen(0);
         if ("history" in message.payload && token) {
-          persistHistory(token, message.payload.history);
-          setHistory(message.payload.history);
+          const hist = message.payload.history.map((h: HistoryEntry) => ({ ...h, canvasState: normalizeCanvasState(h.canvasState) }));
+          persistHistory(token, hist);
+          setHistory(hist);
         }
       }
     },
-    [navigate, token],
+    [navigate, token, interfaceType],
   );
 
   const socketRef = useParticipantSocket(token, Boolean(data?.resumableSession), handleSocketMessage);
 
-  function handleCanvasAction(action: CanvasAction) {
-    if (!trial) {
-      return;
+  function handleSignalAction(action: SignalAction) {
+    if (!trial) return;
+    // For blocks: push undo on place/remove
+    if (interfaceType === "blocks" && (action.action === "place" || action.action === "remove")) {
+      pushUndo(speakerCanvasState);
     }
-    if (action.action === "place") {
-      setSpeakerCanvas((current) => [
-        ...current,
-        {
-          instanceId: action.primitiveInstanceId,
-          primitiveId: action.primitiveId,
-          x: action.x,
-          y: action.y,
-          placementOrder: current.length + 1,
-          createdAtMs: action.timestampMs,
-          updatedAtMs: action.timestampMs,
-        },
-      ]);
+    // For stroke-based: push undo on stroke_start
+    if ((interfaceType === "inertial" || interfaceType === "etch_a_sketch") && action.action === "stroke_start") {
+      pushUndo(speakerCanvasState);
     }
-    if (action.action === "move") {
-      setSpeakerCanvas((current) =>
-        current.map((primitive) =>
-          primitive.instanceId === action.primitiveInstanceId
-            ? { ...primitive, x: action.x, y: action.y, updatedAtMs: action.timestampMs }
-            : primitive,
-        ),
-      );
-    }
-    if (action.action === "remove") {
-      setSpeakerCanvas((current) => current.filter((primitive) => primitive.instanceId !== action.primitiveInstanceId));
-    }
+    setSpeakerCanvasState((current) => applyActionToCanvasState(current, action));
     sendSocket(socketRef.current, "canvas_action", action as unknown as Record<string, unknown>);
   }
 
   const manifest = data?.assets;
-  const displayedCanvas = trial?.role === "speaker" ? speakerCanvas : listenerCanvas;
+  const displayedCanvasState = trial?.role === "speaker" ? speakerCanvasState : listenerCanvasState;
   const roleLabel = trial?.role === "speaker" ? "Writer" : "Reader";
+  const listenerCanGuess = trial?.role === "listener" && speakerDone;
 
   return (
     <AppShell>
@@ -145,8 +185,8 @@ export function GamePage() {
               <div className="grid-column">
                 <div className="compact-section-header">
                   <div>
-                    <p className="eyebrow">{trial.role === "speaker" ? "Target Set" : "Choice Set"}</p>
-                    <h2>{trial.role === "speaker" ? "Reference the target and write below" : "Read the form and choose above"}</h2>
+                    <h2>{trial.role === "speaker" ? "Target set" : "Choice set"}</h2>
+                    <p className="muted-copy">{trial.role === "speaker" ? "Reference the target and write below" : "Read the form and choose above"}</p>
                   </div>
                   {feedback ? (
                     <div className={`feedback-banner ${feedback.correct ? "correct" : "incorrect"}`}>
@@ -161,11 +201,9 @@ export function GamePage() {
                     condition={trial.condition}
                     selectedId={selectedGuess}
                     targetId={trial.role === "speaker" ? trial.targetReferent : undefined}
-                    disabled={trial.role !== "listener" || !listenerCanvas.length}
+                    disabled={!listenerCanGuess}
                     onSelect={(referentId) => {
-                      if (trial.role !== "listener") {
-                        return;
-                      }
+                      if (!listenerCanGuess) return;
                       setSelectedGuess(referentId);
                       sendSocket(socketRef.current, "listener_guess", {
                         selectedReferent: referentId,
@@ -178,32 +216,44 @@ export function GamePage() {
               <div className="panel subtle-panel compact-game-panel">
                 <div className="canvas-header">
                   <div>
-                    <p className="eyebrow">{trial.role === "speaker" ? "Target Word" : "Received Form"}</p>
-                    <h2>{trial.role === "speaker" ? "Build the symbol composition" : "Interpret your partner's form"}</h2>
+                    <h2>{trial.role === "speaker" ? "Target word" : "Received form"}</h2>
+                    <p className="muted-copy">{trial.role === "speaker" ? "Build your word" : "Interpret your partner's form"}</p>
                   </div>
                   <div className="timer-badge">{secondsLeft}s</div>
                 </div>
-                <CompositionWorkspace
-                  primitives={manifest.primitives}
-                  placedPrimitives={displayedCanvas}
-                  onAction={trial.role === "speaker" ? handleCanvasAction : undefined}
+                <SignalWorkspace
+                  interfaceType={interfaceType}
+                  canvasState={displayedCanvasState}
+                  onAction={trial.role === "speaker" ? handleSignalAction : undefined}
                   readOnly={trial.role !== "speaker"}
+                  primitives={manifest.primitives}
                   maxPrimitives={data.studyConfig.maxPrimitivesPerForm}
+                  seismographMode={seismographMode}
+                  inertialAlpha={inertialAlpha}
+                  onClear={handleClear}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  canUndo={undoLen > 0}
+                  canRedo={redoLen > 0}
                 />
-                <div className="canvas-actions">
-                  {trial.role === "speaker" && trial.targetAudioUrl ? (
-                    <button type="button" className="secondary-button" onClick={() => playAudio(trial.targetAudioUrl!)}>
-                      Replay Word
+                {trial.role === "speaker" ? (
+                  <div className="canvas-actions">
+                    <div />
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => sendSocket(socketRef.current, "canvas_snapshot", { canvasState: speakerCanvasState, submittedAtMs: Date.now() })}
+                    >
+                      Done
                     </button>
-                  ) : null}
-                  {trial.role === "speaker" ? (
-                    <button type="button" className="primary-button" onClick={() => sendSocket(socketRef.current, "canvas_snapshot", { submittedAtMs: Date.now() })}>
-                      Transmit
-                    </button>
-                  ) : (
-                    <div className="waiting-copy">{listenerCanvas.length ? "Choose a referent above." : "Waiting for your partner..."}</div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="canvas-actions">
+                    <div className="waiting-copy">
+                      {speakerDone ? "Choose a referent above." : "Watching your partner compose..."}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="game-side-column">

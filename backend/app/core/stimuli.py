@@ -79,6 +79,10 @@ PRIMITIVES: tuple[Primitive, ...] = (
     Primitive("decorator_wave", "decorator", "Wave", "primitive-decorator-wave.svg"),
     Primitive("decorator_arrow", "decorator", "Arrow", "primitive-decorator-arrow.svg"),
     Primitive("decorator_ring", "decorator", "Ring", "primitive-decorator-ring.svg"),
+    Primitive("stroke_arc", "stroke", "Arc", "primitive-stroke-arc.svg"),
+    Primitive("enclosure_diamond", "enclosure", "Diamond", "primitive-enclosure-diamond.svg"),
+    Primitive("complex_star", "complex", "Star", "primitive-complex-star.svg"),
+    Primitive("decorator_dash", "decorator", "Dash", "primitive-decorator-dash.svg"),
 )
 
 

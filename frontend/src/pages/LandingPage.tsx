@@ -40,8 +40,8 @@ export function LandingPage() {
     if (!token) {
       return;
     }
-    await recordConsent(token, consented);
-    await recordAudioCheck(token, audioChecked);
+    await recordConsent(token, true);
+    await recordAudioCheck(token, true);
     await completeLearning(token, 0);
     await refresh();
     navigate(`/session/${token}/lobby`);
@@ -50,8 +50,13 @@ export function LandingPage() {
   return (
     <AppShell>
       <section className="panel stack">
+        <div className="debug-skip-row">
+          <button type="button" className="debug-skip-button" onClick={() => void handleSkipLearning()}>
+            DEBUG: skip
+          </button>
+        </div>
         <p className="eyebrow">Setup</p>
-        <h1>Consent and Audio Check</h1>
+        <h2>Consent and Audio Check</h2>
         <p>Before you begin, confirm consent and make sure you can hear the language stimuli clearly.</p>
         {loading ? <p>Loading session...</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
@@ -60,7 +65,15 @@ export function LandingPage() {
           <span>I consent to participate in this study.</span>
         </label>
         <div className="audio-check-card">
-          <button type="button" className="secondary-button" onClick={() => sampleAudio && playAudio(sampleAudio)}>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              if (sampleAudio) {
+                playAudio(sampleAudio);
+              }
+            }}
+          >
             Play sample audio
           </button>
           <label className="checkbox-row">
@@ -68,12 +81,9 @@ export function LandingPage() {
             <span>I can hear the audio clearly.</span>
           </label>
         </div>
-        <div className="button-row">
+        <div className="centered">
           <button type="button" className="primary-button" disabled={!consented || !audioChecked} onClick={() => void handleContinue()}>
-            Continue to Learning
-          </button>
-          <button type="button" className="secondary-button" disabled={!consented || !audioChecked} onClick={() => void handleSkipLearning()}>
-            Skip Learning and Enter Lobby
+            Continue
           </button>
         </div>
       </section>

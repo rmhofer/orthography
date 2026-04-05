@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     lobby_wait_limit_seconds: int = 180
     history_preview_size: int = 3
     view_mode: str = "transmit"
+    interface_type: str = "blocks"
+    seismograph_mode: str = "hold_to_draw"
+    inertial_alpha: float = 0.15
     completion_code_prefix: str = "SG"
 
     def public_study_config(self) -> dict:
@@ -53,6 +56,9 @@ class Settings(BaseSettings):
             "pointsPerCorrect": self.points_per_correct,
             "showWordAudioToSpeaker": True,
             "historyPreviewSize": self.history_preview_size,
+            "interfaceType": self.interface_type,
+            "seismographMode": self.seismograph_mode,
+            "inertialAlpha": self.inertial_alpha,
         }
 
 
