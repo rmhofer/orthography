@@ -50,10 +50,11 @@ class Repository:
         self.db.refresh(config)
         return config.value
 
-    def create_participant(self, metadata: dict | None = None) -> ParticipantModel:
+    def create_participant(self, metadata: dict | None = None, custom_token: str | None = None) -> ParticipantModel:
         metadata = metadata or {}
         metadata.setdefault("assignedCondition", random.choice(["transparent", "opaque"]))
-        participant = ParticipantModel(token=secrets.token_urlsafe(18), metadata_json=metadata, learning_state={})
+        token = custom_token or secrets.token_urlsafe(6)  # ~8 chars
+        participant = ParticipantModel(token=token, metadata_json=metadata, learning_state={})
         self.db.add(participant)
         self.db.commit()
         self.db.refresh(participant)
@@ -294,4 +295,6 @@ class Repository:
             participant = self.get_participant_by_token(token)
             if participant:
                 return participant
+            # Token provided but doesn't exist — create with that exact token
+            return self.create_participant(metadata, custom_token=token)
         return self.create_participant(metadata)

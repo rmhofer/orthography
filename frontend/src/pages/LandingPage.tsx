@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { AppShell } from "../components/AppShell";
 import { completeLearning, recordAudioCheck, recordConsent } from "../lib/api";
@@ -9,6 +9,8 @@ import { useBootstrap } from "../hooks/useBootstrap";
 export function LandingPage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
   const { data, loading, error, refresh } = useBootstrap(token);
   const [consented, setConsented] = useState(false);
   const [audioChecked, setAudioChecked] = useState(false);
@@ -19,32 +21,28 @@ export function LandingPage() {
       return;
     }
     if (data.participant.phase !== "landing" && data.participant.phase !== "consent_complete") {
-      navigate(phaseRoute(token, data.participant.phase));
+      navigate(phaseRoute(token, data.participant.phase) + qs);
     } else {
       setConsented(Boolean(data.participant.consented));
       setAudioChecked(Boolean(data.participant.audioChecked));
     }
-  }, [data, navigate, token]);
+  }, [data, navigate, token, qs]);
 
   async function handleContinue() {
-    if (!token) {
-      return;
-    }
+    if (!token) return;
     await recordConsent(token, consented);
     await recordAudioCheck(token, audioChecked);
     await refresh();
-    navigate(`/session/${token}/learning`);
+    navigate(`/session/${token}/learning${qs}`);
   }
 
   async function handleSkipLearning() {
-    if (!token) {
-      return;
-    }
+    if (!token) return;
     await recordConsent(token, true);
     await recordAudioCheck(token, true);
     await completeLearning(token, 0);
     await refresh();
-    navigate(`/session/${token}/lobby`);
+    navigate(`/session/${token}/lobby${qs}`);
   }
 
   return (

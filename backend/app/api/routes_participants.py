@@ -31,7 +31,14 @@ def start_participant(
     db: Session = Depends(get_db),
 ) -> ParticipantStartResponse:
     repository = Repository(db)
-    participant = repository.get_or_create_participant(request.token, request.recruitmentData)
+    metadata = dict(request.recruitmentData)
+    if request.interfaceType:
+        metadata["interfaceType"] = request.interfaceType
+    participant = repository.get_or_create_participant(request.token, metadata)
+    # Update interface type if provided and participant already exists
+    if request.interfaceType and participant.metadata_json.get("interfaceType") != request.interfaceType:
+        participant.metadata_json = {**participant.metadata_json, "interfaceType": request.interfaceType}
+        repository.update_participant(participant)
     return ParticipantStartResponse(token=participant.token, participantId=participant.public_id, phase=participant.phase)
 
 

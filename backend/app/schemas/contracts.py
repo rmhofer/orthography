@@ -27,6 +27,7 @@ class StudyConfig(BaseModel):
 class ParticipantStartRequest(BaseModel):
     token: str | None = None
     recruitmentData: dict[str, Any] = Field(default_factory=dict)
+    interfaceType: str | None = None
 
 
 class ParticipantStartResponse(BaseModel):

@@ -150,12 +150,17 @@ class SessionManager:
         paired = None
         if config["pairingMode"] == "auto":
             waiting = repository.list_waiting_participants()
-            grouped: dict[str, list[ParticipantModel]] = {"transparent": [], "opaque": []}
-            for waiting_participant in waiting:
-                grouped[waiting_participant.metadata_json.get("assignedCondition", "transparent")].append(waiting_participant)
-            for assigned_condition in ["transparent", "opaque"]:
-                if len(grouped[assigned_condition]) >= 2:
-                    paired = self.pair_participants(db, grouped[assigned_condition][0], grouped[assigned_condition][1], assigned_condition)
+            # Group by (assignedCondition, interfaceType) — only same-interface participants can pair
+            grouped: dict[tuple[str, str], list[ParticipantModel]] = {}
+            for wp in waiting:
+                key = (
+                    wp.metadata_json.get("assignedCondition", "transparent"),
+                    wp.metadata_json.get("interfaceType", "blocks"),
+                )
+                grouped.setdefault(key, []).append(wp)
+            for key, group in grouped.items():
+                if len(group) >= 2:
+                    paired = self.pair_participants(db, group[0], group[1], key[0])
                     break
         return {"participantPhase": participant.phase, "pairedSession": paired}
 

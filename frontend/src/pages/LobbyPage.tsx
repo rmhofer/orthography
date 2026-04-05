@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { AppShell } from "../components/AppShell";
 import { joinLobby } from "../lib/api";
@@ -9,6 +9,8 @@ import { useBootstrap } from "../hooks/useBootstrap";
 export function LobbyPage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
   const { data, refresh } = useBootstrap(token);
   const [joined, setJoined] = useState(false);
   const [secondsWaiting, setSecondsWaiting] = useState(0);
@@ -34,9 +36,9 @@ export function LobbyPage() {
       return;
     }
     if (data.participant.phase === "game" || data.resumableSession) {
-      navigate(`/session/${token}/game`);
+      navigate(`/session/${token}/game${qs}`);
     }
-  }, [data, navigate, token]);
+  }, [data, navigate, token, qs]);
 
   return (
     <AppShell>

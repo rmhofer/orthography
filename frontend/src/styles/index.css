@@ -691,6 +691,41 @@ select:focus {
   text-align: center;
 }
 
+/* ── Interface picker ──────────────────────────────────── */
+.interface-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.4rem;
+}
+
+.interface-option {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+  font-size: 0.8rem;
+  color: var(--ink-secondary);
+}
+
+.interface-option strong {
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.interface-option:hover {
+  border-color: var(--border-strong);
+}
+
+.interface-option.selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
 /* ── Seismograph ───────────────────────────────────────── */
 .seismograph-layout {
   display: grid;
