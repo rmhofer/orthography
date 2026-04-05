@@ -9,6 +9,7 @@ __pycache__/
 symbol_games.db
 coverage/
 .pytest_cache/
+CLAUDE.md
 *.egg-info/
 *.tsbuildinfo
 *.d.ts
