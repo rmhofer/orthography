@@ -1,0 +1,617 @@
+{
+  "stems": [
+    {
+      "id": "talu",
+      "surface": "talu",
+      "label": "Object 1",
+      "finalClass": "vowel",
+      "shapeId": "orbital"
+    },
+    {
+      "id": "miso",
+      "surface": "miso",
+      "label": "Object 2",
+      "finalClass": "vowel",
+      "shapeId": "spire"
+    },
+    {
+      "id": "neku",
+      "surface": "neku",
+      "label": "Object 3",
+      "finalClass": "vowel",
+      "shapeId": "kite"
+    },
+    {
+      "id": "sola",
+      "surface": "sola",
+      "label": "Object 4",
+      "finalClass": "vowel",
+      "shapeId": "crest"
+    },
+    {
+      "id": "kupi",
+      "surface": "kupi",
+      "label": "Object 5",
+      "finalClass": "vowel",
+      "shapeId": "petal"
+    },
+    {
+      "id": "rem",
+      "surface": "rem",
+      "label": "Object 6",
+      "finalClass": "consonant",
+      "shapeId": "star"
+    },
+    {
+      "id": "tun",
+      "surface": "tun",
+      "label": "Object 7",
+      "finalClass": "consonant",
+      "shapeId": "arch"
+    },
+    {
+      "id": "sik",
+      "surface": "sik",
+      "label": "Object 8",
+      "finalClass": "consonant",
+      "shapeId": "drop"
+    },
+    {
+      "id": "pol",
+      "surface": "pol",
+      "label": "Object 9",
+      "finalClass": "consonant",
+      "shapeId": "hex"
+    },
+    {
+      "id": "fam",
+      "surface": "fam",
+      "label": "Object 10",
+      "finalClass": "consonant",
+      "shapeId": "spark"
+    }
+  ],
+  "modifiers": [
+    {
+      "id": "bare",
+      "label": "Bare",
+      "suffix": "",
+      "variant": "base",
+      "description": "Base object"
+    },
+    {
+      "id": "mod_a",
+      "label": "Modifier A",
+      "suffix": "ika",
+      "variant": "red",
+      "description": "Red variant"
+    },
+    {
+      "id": "mod_b",
+      "label": "Modifier B",
+      "suffix": "onu",
+      "variant": "large",
+      "description": "Large variant"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "stroke_bar",
+      "category": "stroke",
+      "label": "Horizontal bar",
+      "svgUrl": "/study-assets/primitives/primitive-stroke-bar.svg"
+    },
+    {
+      "id": "stroke_pillar",
+      "category": "stroke",
+      "label": "Vertical bar",
+      "svgUrl": "/study-assets/primitives/primitive-stroke-pillar.svg"
+    },
+    {
+      "id": "stroke_slash",
+      "category": "stroke",
+      "label": "Diagonal slash",
+      "svgUrl": "/study-assets/primitives/primitive-stroke-slash.svg"
+    },
+    {
+      "id": "stroke_hook",
+      "category": "stroke",
+      "label": "Curve hook",
+      "svgUrl": "/study-assets/primitives/primitive-stroke-hook.svg"
+    },
+    {
+      "id": "enclosure_square",
+      "category": "enclosure",
+      "label": "Square",
+      "svgUrl": "/study-assets/primitives/primitive-enclosure-square.svg"
+    },
+    {
+      "id": "enclosure_circle",
+      "category": "enclosure",
+      "label": "Circle",
+      "svgUrl": "/study-assets/primitives/primitive-enclosure-circle.svg"
+    },
+    {
+      "id": "enclosure_triangle",
+      "category": "enclosure",
+      "label": "Triangle",
+      "svgUrl": "/study-assets/primitives/primitive-enclosure-triangle.svg"
+    },
+    {
+      "id": "enclosure_halfbox",
+      "category": "enclosure",
+      "label": "Half box",
+      "svgUrl": "/study-assets/primitives/primitive-enclosure-halfbox.svg"
+    },
+    {
+      "id": "complex_cross",
+      "category": "complex",
+      "label": "Cross",
+      "svgUrl": "/study-assets/primitives/primitive-complex-cross.svg"
+    },
+    {
+      "id": "complex_dots",
+      "category": "complex",
+      "label": "Dot cluster",
+      "svgUrl": "/study-assets/primitives/primitive-complex-dots.svg"
+    },
+    {
+      "id": "complex_zigzag",
+      "category": "complex",
+      "label": "Zigzag",
+      "svgUrl": "/study-assets/primitives/primitive-complex-zigzag.svg"
+    },
+    {
+      "id": "complex_spiral",
+      "category": "complex",
+      "label": "Spiral",
+      "svgUrl": "/study-assets/primitives/primitive-complex-spiral.svg"
+    },
+    {
+      "id": "decorator_tick",
+      "category": "decorator",
+      "label": "Tick",
+      "svgUrl": "/study-assets/primitives/primitive-decorator-tick.svg"
+    },
+    {
+      "id": "decorator_wave",
+      "category": "decorator",
+      "label": "Wave",
+      "svgUrl": "/study-assets/primitives/primitive-decorator-wave.svg"
+    },
+    {
+      "id": "decorator_arrow",
+      "category": "decorator",
+      "label": "Arrow",
+      "svgUrl": "/study-assets/primitives/primitive-decorator-arrow.svg"
+    },
+    {
+      "id": "decorator_ring",
+      "category": "decorator",
+      "label": "Ring",
+      "svgUrl": "/study-assets/primitives/primitive-decorator-ring.svg"
+    }
+  ],
+  "referents": [
+    {
+      "id": "talu",
+      "stemId": "talu",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/talu.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/talu.wav",
+        "opaque": "/study-assets/audio/opaque/talu.wav"
+      },
+      "surfaceForms": {
+        "transparent": "talu",
+        "opaque": "talu"
+      }
+    },
+    {
+      "id": "talu_mod_a",
+      "stemId": "talu",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/talu_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/talu_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/talu_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "taluika",
+        "opaque": "talka"
+      }
+    },
+    {
+      "id": "talu_mod_b",
+      "stemId": "talu",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/talu_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/talu_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/talu_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "taluonu",
+        "opaque": "talnu"
+      }
+    },
+    {
+      "id": "miso",
+      "stemId": "miso",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/miso.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/miso.wav",
+        "opaque": "/study-assets/audio/opaque/miso.wav"
+      },
+      "surfaceForms": {
+        "transparent": "miso",
+        "opaque": "miso"
+      }
+    },
+    {
+      "id": "miso_mod_a",
+      "stemId": "miso",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/miso_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/miso_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/miso_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "misoika",
+        "opaque": "miska"
+      }
+    },
+    {
+      "id": "miso_mod_b",
+      "stemId": "miso",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/miso_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/miso_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/miso_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "misoonu",
+        "opaque": "misnu"
+      }
+    },
+    {
+      "id": "neku",
+      "stemId": "neku",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/neku.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/neku.wav",
+        "opaque": "/study-assets/audio/opaque/neku.wav"
+      },
+      "surfaceForms": {
+        "transparent": "neku",
+        "opaque": "neku"
+      }
+    },
+    {
+      "id": "neku_mod_a",
+      "stemId": "neku",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/neku_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/neku_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/neku_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "nekuika",
+        "opaque": "nekka"
+      }
+    },
+    {
+      "id": "neku_mod_b",
+      "stemId": "neku",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/neku_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/neku_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/neku_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "nekuonu",
+        "opaque": "neknu"
+      }
+    },
+    {
+      "id": "sola",
+      "stemId": "sola",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/sola.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/sola.wav",
+        "opaque": "/study-assets/audio/opaque/sola.wav"
+      },
+      "surfaceForms": {
+        "transparent": "sola",
+        "opaque": "sola"
+      }
+    },
+    {
+      "id": "sola_mod_a",
+      "stemId": "sola",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/sola_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/sola_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/sola_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "solaika",
+        "opaque": "solka"
+      }
+    },
+    {
+      "id": "sola_mod_b",
+      "stemId": "sola",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/sola_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/sola_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/sola_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "solaonu",
+        "opaque": "solnu"
+      }
+    },
+    {
+      "id": "kupi",
+      "stemId": "kupi",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/kupi.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/kupi.wav",
+        "opaque": "/study-assets/audio/opaque/kupi.wav"
+      },
+      "surfaceForms": {
+        "transparent": "kupi",
+        "opaque": "kupi"
+      }
+    },
+    {
+      "id": "kupi_mod_a",
+      "stemId": "kupi",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/kupi_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/kupi_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/kupi_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "kupiika",
+        "opaque": "kupka"
+      }
+    },
+    {
+      "id": "kupi_mod_b",
+      "stemId": "kupi",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/kupi_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/kupi_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/kupi_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "kupionu",
+        "opaque": "kupnu"
+      }
+    },
+    {
+      "id": "rem",
+      "stemId": "rem",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/rem.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/rem.wav",
+        "opaque": "/study-assets/audio/opaque/rem.wav"
+      },
+      "surfaceForms": {
+        "transparent": "rem",
+        "opaque": "rem"
+      }
+    },
+    {
+      "id": "rem_mod_a",
+      "stemId": "rem",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/rem_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/rem_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/rem_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "remika",
+        "opaque": "remika"
+      }
+    },
+    {
+      "id": "rem_mod_b",
+      "stemId": "rem",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/rem_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/rem_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/rem_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "remonu",
+        "opaque": "remonu"
+      }
+    },
+    {
+      "id": "tun",
+      "stemId": "tun",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/tun.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/tun.wav",
+        "opaque": "/study-assets/audio/opaque/tun.wav"
+      },
+      "surfaceForms": {
+        "transparent": "tun",
+        "opaque": "tun"
+      }
+    },
+    {
+      "id": "tun_mod_a",
+      "stemId": "tun",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/tun_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/tun_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/tun_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "tunika",
+        "opaque": "tunika"
+      }
+    },
+    {
+      "id": "tun_mod_b",
+      "stemId": "tun",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/tun_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/tun_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/tun_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "tunonu",
+        "opaque": "tunonu"
+      }
+    },
+    {
+      "id": "sik",
+      "stemId": "sik",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/sik.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/sik.wav",
+        "opaque": "/study-assets/audio/opaque/sik.wav"
+      },
+      "surfaceForms": {
+        "transparent": "sik",
+        "opaque": "sik"
+      }
+    },
+    {
+      "id": "sik_mod_a",
+      "stemId": "sik",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/sik_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/sik_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/sik_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "sikika",
+        "opaque": "sikika"
+      }
+    },
+    {
+      "id": "sik_mod_b",
+      "stemId": "sik",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/sik_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/sik_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/sik_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "sikonu",
+        "opaque": "sikonu"
+      }
+    },
+    {
+      "id": "pol",
+      "stemId": "pol",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/pol.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/pol.wav",
+        "opaque": "/study-assets/audio/opaque/pol.wav"
+      },
+      "surfaceForms": {
+        "transparent": "pol",
+        "opaque": "pol"
+      }
+    },
+    {
+      "id": "pol_mod_a",
+      "stemId": "pol",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/pol_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/pol_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/pol_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "polika",
+        "opaque": "polika"
+      }
+    },
+    {
+      "id": "pol_mod_b",
+      "stemId": "pol",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/pol_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/pol_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/pol_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "polonu",
+        "opaque": "polonu"
+      }
+    },
+    {
+      "id": "fam",
+      "stemId": "fam",
+      "modifierId": "bare",
+      "imageUrl": "/study-assets/referents/fam.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/fam.wav",
+        "opaque": "/study-assets/audio/opaque/fam.wav"
+      },
+      "surfaceForms": {
+        "transparent": "fam",
+        "opaque": "fam"
+      }
+    },
+    {
+      "id": "fam_mod_a",
+      "stemId": "fam",
+      "modifierId": "mod_a",
+      "imageUrl": "/study-assets/referents/fam_mod_a.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/fam_mod_a.wav",
+        "opaque": "/study-assets/audio/opaque/fam_mod_a.wav"
+      },
+      "surfaceForms": {
+        "transparent": "famika",
+        "opaque": "famika"
+      }
+    },
+    {
+      "id": "fam_mod_b",
+      "stemId": "fam",
+      "modifierId": "mod_b",
+      "imageUrl": "/study-assets/referents/fam_mod_b.svg",
+      "audio": {
+        "transparent": "/study-assets/audio/transparent/fam_mod_b.wav",
+        "opaque": "/study-assets/audio/opaque/fam_mod_b.wav"
+      },
+      "surfaceForms": {
+        "transparent": "famonu",
+        "opaque": "famonu"
+      }
+    }
+  ]
+}

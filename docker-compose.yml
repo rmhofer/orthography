@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: symbol_games
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SYMBOL_GAMES_DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/symbol_games
+      SYMBOL_GAMES_ADMIN_PASSWORD: researcher
+      SYMBOL_GAMES_ADMIN_SECRET: replace-me
+      SYMBOL_GAMES_CORS_ORIGINS: '["http://localhost:5173","http://127.0.0.1:5173"]'
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres-data:

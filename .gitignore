@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.venv/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+symbol_games.db
+coverage/
+.pytest_cache/
+*.egg-info/
+*.tsbuildinfo
+*.d.ts
+!frontend/src/**/*.d.ts
+frontend/vite.config.js
+frontend/vite.config.d.ts
