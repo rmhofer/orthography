@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { AppShell } from "../components/AppShell";
-import { startParticipant } from "../lib/api";
+import { completeLearning, recordAudioCheck, recordConsent, startParticipant } from "../lib/api";
 import { phaseRoute } from "../lib/helpers";
 import type { InterfaceType, ParticipantPhase, ReferentDomain } from "../types/contracts";
 
@@ -39,9 +39,16 @@ export function IntroPage() {
     try {
       const token = userId.trim() || undefined;
       const response = await startParticipant(token, selectedInterface, selectedDomain);
-      const phase = response.phase as ParticipantPhase;
-      const route = phaseRoute(response.token, phase);
-      navigate(`${route}?interface=${selectedInterface}`);
+      const t = response.token;
+      // Skip consent, audio check, and learning — go straight to lobby
+      if (response.phase === "landing" || response.phase === "consent_complete" || response.phase === "learning") {
+        await recordConsent(t, true);
+        await recordAudioCheck(t, true);
+        await completeLearning(t, 0);
+        navigate(`/session/${t}/lobby?interface=${selectedInterface}`);
+      } else {
+        navigate(`${phaseRoute(t, response.phase as ParticipantPhase)}?interface=${selectedInterface}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start session.");
     } finally {
