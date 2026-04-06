@@ -49,6 +49,12 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/api/manifest")
+def get_manifest(domain: str = "objects") -> dict:
+    from app.core.stimuli import build_manifest
+    return build_manifest(domain_id=domain)
+
+
 @app.websocket("/ws/participant/{token}")
 async def participant_ws(websocket: WebSocket, token: str) -> None:
     db = SessionLocal()

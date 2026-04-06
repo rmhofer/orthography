@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { AppShell } from "../components/AppShell";
 import { completeLearning, recordAudioCheck, recordConsent, startParticipant } from "../lib/api";
@@ -114,6 +114,10 @@ export function IntroPage() {
           {loading ? "Preparing..." : "Enter Study"}
         </button>
         {error ? <p className="error-text">{error}</p> : null}
+        <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
+          <Link to="/sandbox" className="secondary-button" style={{ textDecoration: "none" }}>Sandbox</Link>
+          <Link to="/admin" className="secondary-button" style={{ textDecoration: "none" }}>Admin</Link>
+        </div>
       </section>
     </AppShell>
   );

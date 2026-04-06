@@ -29,6 +29,10 @@ export async function startParticipant(token?: string, interfaceType?: string, r
   });
 }
 
+export async function fetchManifest(domain: string) {
+  return apiFetch<ParticipantBootstrap["assets"]>(`/api/manifest?domain=${domain}`);
+}
+
 export async function bootstrapParticipant(token: string): Promise<ParticipantBootstrap> {
   return apiFetch<ParticipantBootstrap>(`/api/participants/${token}/bootstrap`);
 }

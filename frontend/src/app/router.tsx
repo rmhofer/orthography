@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { DesktopGuard } from "../components/DesktopGuard";
 import { AdminPage } from "../pages/AdminPage";
+import { SandboxPage } from "../pages/SandboxPage";
 import { CompletionPage } from "../pages/CompletionPage";
 import { DebriefPage } from "../pages/DebriefPage";
 import { GamePage } from "../pages/GamePage";
@@ -23,6 +24,7 @@ export function AppRouter() {
         <Route path="/session/:token/debrief" element={<DebriefPage />} />
         <Route path="/session/:token/completion" element={<CompletionPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/sandbox" element={<SandboxPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
